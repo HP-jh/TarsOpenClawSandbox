@@ -1,3 +1,7 @@
+0.2.7 - 2026-10-18
+  - Token-bucket rate limiter for SSE endpoints (60/min default)
+  - race-safe internal/ratelimit with burst support
+
 0.2.6 - 2026-10-18
   - Enhanced health checks: JSON /health /ready endpoints, /metrics stub
   - IsSandboxHealthy returns structured status with uptime estimate

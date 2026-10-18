@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/HP-jh/TarsOpenClawSandbox/internal/sandbox"
 	"github.com/HP-jh/TarsOpenClawSandbox/pkg/version"
@@ -124,7 +125,17 @@ func (s *MCPServer) runSSE(ctx context.Context) error {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("# metrics stub\n"))
 	})
-	server := &http.Server{Addr: ":18080", Handler: mux}
+	// Rate limit SSE endpoints.
+	rl := NewTokenBucket(60, time.Minute)
+	wrapped := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !rl.Allow() {
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte(`{"error":"rate limit exceeded"}`))
+			return
+		}
+		mux.ServeHTTP(w, r)
+	})
+	server := &http.Server{Addr: ":18080", Handler: wrapped}
 	go func() {
 		<-ctx.Done()
 		server.Shutdown(context.Background())
