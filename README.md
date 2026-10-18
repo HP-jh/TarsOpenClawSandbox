@@ -120,3 +120,8 @@ go test -race ./...
 ## License
 
 Apache-2.0
+
+## Changelog
+
+### v1.0.1
+- Version bump with stability improvements
