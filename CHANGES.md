@@ -1,3 +1,7 @@
+0.2.10 - 2026-10-18
+  - Config validation: sandbox_mode, network_mode, mcp_transport, openclaw_path
+  - Reject invalid configs early with descriptive errors
+
 0.2.9 - 2026-10-18
   - Auto-update checker: query GitHub latest release + version compare
   - internal/updater with timeout-safe HTTP client
