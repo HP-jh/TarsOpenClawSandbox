@@ -1,18 +1,7 @@
-## v0.2.4 (2026-10-18)
-
-### 历史优点整合
-- 整合此前所有版本的稳定性与可靠性改进
-- 统一错误处理与日志规范
-- 强化安全基线（输入校验、边界检查）
-
-### 本版改进
-- 代码质量：补充边界条件注释与文档
-- 运维友好：CHANGES.md 持续维护，版本追踪更清晰
-- 新增文档/脚本：提升可维护性与可观测性
-
-### 测试
-- 现有测试套件通过验证
-
+0.2.4 - 2026-10-18
+  - Build-time version injection via -ldflags (Version/Commit/BuildTime)
+  - Fix MCP serverInfo hardcoded version to use pkg/version dynamically
+  - Add build script with ldflags support
 
 0.2.3 - 2026-10-18
   - Patch version bump

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/HP-jh/TarsOpenClawSandbox/pkg/version"
 )
 
 // MCPRequest / MCPResponse represent JSON-RPC 2.0 message shapes.
@@ -122,7 +124,7 @@ func (s *MCPServer) handle(req MCPRequest) *MCPResponse {
 			"capabilities":    map[string]interface{}{},
 			"serverInfo": map[string]interface{}{
 				"name":    "tarsclaw-sandbox",
-				"version": "0.1.0",
+				"version": version.Version,
 			},
 		}}
 	case "tools/list":
