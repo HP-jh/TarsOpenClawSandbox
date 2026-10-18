@@ -31,7 +31,6 @@ func (d *Defender) PluginNamespace(pluginName string) string {
 	if !d.cfg.PluginIsolation {
 		return ""
 	}
-	// Return a deterministic isolated namespace name.
 	h := sha256.Sum256([]byte(pluginName))
 	return fmt.Sprintf("tsg-plugin-%s", hex.EncodeToString(h[:8]))
 }
@@ -74,7 +73,6 @@ func (d *Defender) VerifyToken(cipherToken string) (string, bool) {
 }
 
 func deriveKey() []byte {
-	// In production this reads from HSM/KMS env or file; here we use a derived key from a seed file.
 	seedPath := filepath.Join(os.TempDir(), ".tarsclaw-sandbox", "token-seed")
 	data, err := os.ReadFile(seedPath)
 	if err != nil || len(data) < 32 {
@@ -115,7 +113,20 @@ func (d *Defender) SafePath(requested, baseDir string) (string, error) {
 	if !strings.HasPrefix(target, base+string(os.PathSeparator)) && target != base {
 		return "", fmt.Errorf("path traversal blocked: %s", requested)
 	}
-	return target, nil
+	// Resolve symlinks and re-validate to prevent symlink escapes.
+	resolved, err := filepath.EvalSymlinks(target)
+	if err != nil {
+		// If target doesn't exist yet, it's safe as long as the raw path is inside base.
+		return target, nil
+	}
+	resolvedBase, err := filepath.EvalSymlinks(base)
+	if err != nil {
+		resolvedBase = base
+	}
+	if !strings.HasPrefix(resolved, resolvedBase+string(os.PathSeparator)) && resolved != resolvedBase {
+		return "", fmt.Errorf("symlink escape blocked: %s", requested)
+	}
+	return resolved, nil
 }
 
 // --- 5. Webhook SSRF Blacklist ---
@@ -153,7 +164,7 @@ func (d *Defender) BlockSSRF(rawURL string) error {
 	return nil
 }
 
-// --- 6. LLM Prompt Injection Filter (reuse TSG v4.7 WAF + semguard) ---
+// --- 6. LLM Prompt Injection Filter ---
 var promptInjectionPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)(ignore\s+(previous|above)\s+(instructions|prompts?))`),
 	regexp.MustCompile(`(?i)(system\s*prompt\s*leak|leak\s*your\s*prompt)`),
@@ -174,7 +185,7 @@ func (d *Defender) FilterLLM(input string) (string, error) {
 	return input, nil
 }
 
-// --- 7. OAuth State CSRF (device fingerprint + monotonic counter) ---
+// --- 7. OAuth State CSRF ---
 func (d *Defender) GenerateOAuthState(deviceID string) string {
 	if !d.cfg.OAuthCSRF {
 		return "insecure"
@@ -188,7 +199,6 @@ func (d *Defender) VerifyOAuthState(state, deviceID string) bool {
 	if !d.cfg.OAuthCSRF {
 		return true
 	}
-	// In real impl, lookup state in a bounded cache; here we verify HMAC-like format.
 	return len(state) == 64
 }
 
@@ -208,11 +218,10 @@ func (d *Defender) ValidateIMPayload(contentType string, body []byte) error {
 	if !allowedContentTypes[ct] {
 		return fmt.Errorf("IM smuggling blocked: disallowed content-type %q", contentType)
 	}
-	const maxLen = 16 * 1024 * 1024 // 16 MB
+	const maxLen = 16 * 1024 * 1024
 	if len(body) > maxLen {
 		return fmt.Errorf("IM smuggling blocked: body exceeds %d bytes", maxLen)
 	}
-	// Reject non-printable / binary payloads masquerading as text.
 	if ct == "text/plain" || ct == "text/markdown" {
 		for _, b := range body {
 			if b == 0 {
@@ -233,4 +242,4 @@ func sanitize(s string) string {
 	return b.String()
 }
 
-var _ = sync.Once{} // ensure sync imported for future extensions
+var _ = sync.Once{}

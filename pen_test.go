@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -202,6 +204,32 @@ func TestCVEReproducer(t *testing.T) {
 		"note":       "Plugin namespace isolation prevents cross-plugin privilege escalation",
 	}
 	t.Logf("CVE report: %+v", report)
+}
+
+func TestDefenderPathTraversalSymlink(t *testing.T) {
+	cfg := internal.DefaultConfig()
+	cfg.PathTraversalGuard = true
+	d := internal.NewDefender(cfg)
+	base := t.TempDir()
+	// Create a symlink that points outside base.
+	target := filepath.Join(base, "secret.txt")
+	os.WriteFile(target, []byte("secret"), 0644)
+	link := filepath.Join(base, "link")
+	os.Symlink("/etc/passwd", link)
+	_, err := d.SafePath("link", base)
+	if err == nil {
+		t.Fatal("symlink escape must be blocked")
+	}
+	// Safe symlink inside base.
+	goodLink := filepath.Join(base, "goodlink")
+	os.Symlink(target, goodLink)
+	p, err := d.SafePath("goodlink", base)
+	if err != nil {
+		t.Fatalf("safe symlink must pass: %v", err)
+	}
+	if !strings.Contains(p, "secret.txt") {
+		t.Fatalf("expected resolved path to contain secret.txt, got %q", p)
+	}
 }
 
 func TestFuzzAllDefenses(t *testing.T) {

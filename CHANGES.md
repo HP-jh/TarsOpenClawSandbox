@@ -1,3 +1,7 @@
+0.2.5 - 2026-10-18
+  - SafePath symlink hardening: EvalSymlinks + re-validation prevents symlink escapes
+  - Add symlink traversal pen-test cases
+
 0.2.4 - 2026-10-18
   - Build-time version injection via -ldflags (Version/Commit/BuildTime)
   - Fix MCP serverInfo hardcoded version to use pkg/version dynamically
