@@ -1,3 +1,7 @@
+0.2.9 - 2026-10-18
+  - Auto-update checker: query GitHub latest release + version compare
+  - internal/updater with timeout-safe HTTP client
+
 0.2.8 - 2026-10-18
   - Structured JSONL audit log (internal/audit.go)
   - race-safe append-only audit records with timestamps
