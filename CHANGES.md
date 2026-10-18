@@ -1,3 +1,7 @@
+0.2.6 - 2026-10-18
+  - Enhanced health checks: JSON /health /ready endpoints, /metrics stub
+  - IsSandboxHealthy returns structured status with uptime estimate
+
 0.2.5 - 2026-10-18
   - SafePath symlink hardening: EvalSymlinks + re-validation prevents symlink escapes
   - Add symlink traversal pen-test cases

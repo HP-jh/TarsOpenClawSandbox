@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/HP-jh/TarsOpenClawSandbox/internal/sandbox"
 	"github.com/HP-jh/TarsOpenClawSandbox/pkg/version"
 )
 
@@ -104,8 +105,24 @@ func (s *MCPServer) runSSE(ctx context.Context) error {
 		json.NewEncoder(w).Encode(resp)
 	})
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		w.Write([]byte(`{"status":"ok","service":"tarsclaw-sandbox"}`))
+	})
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if sandbox.IsSandboxHealthy() {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"ready":true}`))
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Write([]byte(`{"ready":false}`))
+		}
+	})
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("# metrics stub\n"))
 	})
 	server := &http.Server{Addr: ":18080", Handler: mux}
 	go func() {
