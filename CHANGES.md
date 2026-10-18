@@ -1,3 +1,7 @@
+0.2.8 - 2026-10-18
+  - Structured JSONL audit log (internal/audit.go)
+  - race-safe append-only audit records with timestamps
+
 0.2.7 - 2026-10-18
   - Token-bucket rate limiter for SSE endpoints (60/min default)
   - race-safe internal/ratelimit with burst support
